@@ -2,5 +2,5 @@
 
 聚合常用的服务端运行架构。纯原创！
 
-- [@cevio/moduare](https://www.npmjs.com/@cevio/moduare) 模块管理器
+- [@evio/moduare](https://www.npmjs.com/@evio/moduare) 模块管理器
 
