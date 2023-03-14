@@ -1,17 +1,17 @@
-# @cevio/moduare
+# @e vi o/moduare
 
 模块生命周期控制器，能够根据以来自启动，也能根据依赖自销毁。只要满足启动或销毁条件，即可全部自动处理。
 
 ## Install
 
 ```bash
-$ npm i @cevio/moduare
+$ npm i @evio/moduare
 ```
 
 ## Usage
 
 ```ts
-import { Component, Module, Dependency, terminateComponent, initializeComponent, listen } from '@cevio/moduare';
+import { Component, Module, Dependency, terminateComponent, initializeComponent, listen } from '@evio/moduare';
 
 @Module()
 class A extends Component<{ value: number }> {
@@ -119,7 +119,7 @@ declare abstract class Component<T extends object = {}> {
 组件还必须具备一个`setup`方法用于初始化和卸载。
 
 ```ts
-import { Component, Module, Dependency } from '@cevio/moduare';
+import { Component, Module, Dependency } from '@evio/moduare';
 
 @Module()
 class A extends Component<{ value: number }> {
