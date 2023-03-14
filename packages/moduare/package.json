@@ -1,5 +1,5 @@
 {
-  "name": "@cevio/moduare",
+  "name": "@evio/moduare",
   "version": "1.0.1",
   "description": "some description",
   "license": "MIT",
@@ -19,5 +19,6 @@
   },
   "dependencies": {
     "reflect-metadata": "^0.1.13"
-  }
+  },
+  "gitHead": "127f7f031e15ed028af1bc985e67c9941f742736"
 }
