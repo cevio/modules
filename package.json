@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "build": "rm -rf ./dist && tsc -d",
-    "create": "node scripts/create-new-package.js"
+    "create": "node scripts/create-new-package.js",
+    "pub": "lerna run build && lerna publish"
   },
   "devDependencies": {
     "inquirer": "^9.1.4",

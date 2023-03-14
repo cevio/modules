@@ -5,7 +5,7 @@ const components = new Map<Meta, any>();
 
 export function initializeComponent<T extends Component = Component>(clazz: IClazz<T>, props?: PickComponentProps<T>) {
   const meta = getMeta(clazz);
-  executeTerminateCommander(meta, 'initialize');
+  executeCommander(meta, 'initialize');
   components.set(meta, props);
   return new Promise<T>((resolve, reject) => {
     const handler = (e?: any) => {
@@ -20,11 +20,12 @@ export function initializeComponent<T extends Component = Component>(clazz: ICla
 export function terminateComponent<T extends Component = Component>(clazz: IClazz<T>) {
   const meta = getMeta(clazz);
   if (!components.has(meta)) return Promise.reject(new Error('Component is not exists'));
-  executeTerminateCommander(meta, 'terminate');
+  executeCommander(meta, 'terminate');
   return new Promise<void>((resolve, reject) => {
     const handler = (e?: any) => {
       meta.off('terminate', handler);
       if (e) return reject(e);
+      components.delete(meta);
       resolve();
     }
     meta.on('terminate', handler);
@@ -48,11 +49,11 @@ export function listen(time: number = 100) {
   return () => clearInterval(timer);
 }
 
-function executeTerminateCommander(meta: Meta, commander: IMetaCommader) {
+function executeCommander(meta: Meta, commander: IMetaCommader) {
   meta.commander = commander;
   for (const node of meta.dependents.values()) {
     const nodeMeta = getMeta(node);
-    executeTerminateCommander(nodeMeta, commander);
+    executeCommander(nodeMeta, commander);
   }
 }
 
