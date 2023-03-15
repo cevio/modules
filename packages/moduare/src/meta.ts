@@ -16,6 +16,21 @@ export class Meta<T extends Component = Component> extends EventEmitter {
   public readonly keys = new Map<IClazz, (string | Symbol)[]>();
   public readonly state: any = {};
 
+  static get<T extends Component = Component>(clazz: IClazz<T>): Meta<T> {
+    if (!Reflect.hasMetadata(Meta.namespace, clazz)) {
+      throw new TypeError('Class module must be wrapped with `@Module()` decorator.');
+    }
+    return Reflect.getMetadata(Meta.namespace, clazz);
+  }
+
+  static component<T extends Component = Component>(clazz: IClazz<T>): T {
+    const meta = Meta.get<T>(clazz);
+    if (!meta.instance) throw new Error('Component has not been initialized.');
+    if (meta.instance.__status__ === 0) throw new Error('Component initialing...');
+    if (meta.instance.__status__ === -1) throw meta.instance.__error__;
+    return meta.instance;
+  }
+
   constructor(public readonly clazz: IClazz<T>) {
     super();
     this.setMaxListeners(+Infinity);
@@ -69,7 +84,7 @@ export function Module(options: IModuleProps = {}): ClassDecorator {
     const meta: Meta = Reflect.getMetadata(Meta.namespace, obj);
     const dependencies = options.dependencies || [];
     dependencies.forEach(dependency => {
-      getMeta(dependency).dependents.add(obj as any);
+      Meta.get(dependency).dependents.add(obj as any);
       if (!meta.dependencies.has(dependency)) {
         meta.dependencies.add(dependency);
       }
@@ -80,7 +95,7 @@ export function Module(options: IModuleProps = {}): ClassDecorator {
 export function Dependency<T extends Component = Component>(clazz: IClazz<T>): PropertyDecorator {
   return (obj, key) => {
     const ctor = obj.constructor as IClazz<T>;
-    getMeta(clazz).dependents.add(ctor);
+    Meta.get(clazz).dependents.add(ctor);
 
     if (!Reflect.hasMetadata(Meta.namespace, ctor)) {
       Reflect.defineMetadata(Meta.namespace, new Meta(ctor), ctor);
@@ -101,19 +116,4 @@ export function Dependency<T extends Component = Component>(clazz: IClazz<T>): P
       keys.push(key);
     }
   }
-}
-
-export function getMeta<T extends Component = Component>(clazz: IClazz<T>): Meta<T> {
-  if (!Reflect.hasMetadata(Meta.namespace, clazz)) {
-    throw new TypeError('Class module must be wrapped with `@Module()` decorator.');
-  }
-  return Reflect.getMetadata(Meta.namespace, clazz);
-}
-
-export function getComponent<T extends Component = Component>(clazz: IClazz<T>): T {
-  const meta = getMeta<T>(clazz);
-  if (!meta.instance) throw new Error('Component has not been initialized.');
-  if (meta.instance.__status__ === 0) throw new Error('Component initialing...');
-  if (meta.instance.__status__ === -1) throw meta.instance.__error__;
-  return meta.instance;
 }

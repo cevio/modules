@@ -1,44 +1,56 @@
 import Koa, { Context } from 'koa';
 import FindMyWay, { Instance } from 'koa-router-find-my-way';
-import { Workflow, Pipeline, Flow, INext, getMeta } from '@evio/workflow';
+import { Workflow, Pipeline, Flow, INext, Meta } from '@evio/workflow';
 import { createServer, Server } from 'node:http';
 
-export interface IKoaFindMyWayWorkflowRequestProps {
-  keys: string[],
+export interface IRequest {
+  keys?: string[],
   port: number,
+  ignoreDuplicateSlashes?: boolean,
+  ignoreTrailingSlash?: boolean,
+  maxParamLength?: number,
+  allowUnsafeRegex?: boolean,
+  caseSensitive?: boolean,
 }
 
-export interface IKoaFindMyWayWorkflowResponseProps {
+export interface IResponse {
   koa: Koa,
   fmw: Instance,
   server: Server,
 }
 
 @Workflow()
-export class KoaFindMyWayWorkflow extends Pipeline<
-  IKoaFindMyWayWorkflowRequestProps, 
-  IKoaFindMyWayWorkflowResponseProps
-> {
-  private server: Server;
-  private readonly koa = new Koa();
-  private readonly fmw = FindMyWay({
-    maxParamLength: +Infinity,
-    caseSensitive: true,
-    ignoreTrailingSlash: true,
-    allowUnsafeRegex: true,
-    // @ts-ignore
-    defaultRoute: async (ctx: Context, next: Next) => await next(),
-  })
-  constructor(req: IKoaFindMyWayWorkflowRequestProps) {
+export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> {
+  public server: Server;
+  public readonly koa = new Koa();
+  public readonly fmw: Instance;
+
+  static create(props: IRequest) {
+    return Meta.execute(KoaFindMyWayWorkflow, props);
+  }
+
+  constructor(req: IRequest) {
     super(req, {
       koa: null,
       server: null,
       fmw: null,
     });
+    this.fmw = FindMyWay({
+      ignoreDuplicateSlashes: req.ignoreDuplicateSlashes,
+      ignoreTrailingSlash: req.ignoreTrailingSlash,
+      maxParamLength: req.maxParamLength,
+      allowUnsafeRegex: req.allowUnsafeRegex,
+      caseSensitive: req.caseSensitive,
+      // @ts-ignore
+      defaultRoute: async (ctx: Context, next: Next) => await next(),
+    })
   }
 
   @Flow(true)
   public async addDefaultMiddleware(next: INext<this>) {
+    if (this.req?.keys) {
+      this.koa.keys = this.req.keys;
+    }
     this.koa.use(async (ctx, next) => {
       await this.fmw.routes()(ctx, next);
     });
@@ -63,13 +75,10 @@ export class KoaFindMyWayWorkflow extends Pipeline<
   }
 
   @Flow()
-  public response() {
+  public async response(next: INext<this>) {
     this.res.koa = this.koa;
     this.res.fmw = this.fmw;
     this.res.server = this.server;
+    await next();
   }
-}
-
-export function createApplication(props: IKoaFindMyWayWorkflowRequestProps) {
-  return getMeta(KoaFindMyWayWorkflow).execute(props);
 }

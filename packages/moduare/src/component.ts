@@ -1,4 +1,4 @@
-import { getComponent, getMeta, Meta } from './meta';
+import { Meta } from './meta';
 
 export type IComponentSetupReturnType = void | Promise<void> | (() => void | Promise<void>);
 export type PickComponentProps<T> = T extends Component<infer P> ? P : unknown;
@@ -15,9 +15,9 @@ export abstract class Component<T extends object = {}> {
   public abstract setup(): IComponentSetupReturnType | Promise<IComponentSetupReturnType>;
   constructor(props: T) {
     this.props = props;
-    this.meta = getMeta<Component<T>>(Object.getPrototypeOf(this).constructor);
+    this.meta = Meta.get<Component<T>>(Object.getPrototypeOf(this).constructor);
     for (const [clazz, keys] of this.meta.keys.entries()) {
-      const node = getComponent(clazz);
+      const node = Meta.component(clazz);
       keys.forEach(key => {
         // @ts-ignore
         this[key] = node;

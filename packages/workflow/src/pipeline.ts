@@ -4,7 +4,6 @@ export type PickPipelineStorage<T> = T extends Pipeline<any, any, infer U> ? U :
 
 export class Pipeline<Input = any, Output = any, Storage = any> {
   private readonly __cache__ = new Map<keyof Storage, Storage[keyof Storage]>();
-
   constructor(
     public readonly req: Input,
     public res: Output,
@@ -19,15 +18,15 @@ export class Pipeline<Input = any, Output = any, Storage = any> {
     return this;
   }
 
-  public get<T extends keyof Storage>(name: T): Storage[T] {
-    if (!this.__cache__.has(name)) {
+  public get<T extends keyof Storage>(name: T) {
+    if (!this.has(name)) {
       throw new Error('Property is not executed by name of ' + name.toString());
     }
     return this.__cache__.get(name) as Storage[T];
   }
 
   public del<T extends keyof Storage>(name: T) {
-    if (!this.__cache__.has(name)) {
+    if (!this.has(name)) {
       throw new Error('Property is not executed by name of ' + name.toString());
     }
     this.__cache__.delete(name);

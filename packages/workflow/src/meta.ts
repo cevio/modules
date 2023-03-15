@@ -6,15 +6,27 @@ export interface IClazz<T extends Pipeline = Pipeline> {
   new (req: PickPipelineRequest<T>): T;
 }
 
-export type INext<T extends Pipeline = Pipeline> = (name: keyof T) => Promise<void>;
+export type INext<T extends Pipeline> = (name?: keyof T) => Promise<void>;
 
 export class Meta<T extends Pipeline = Pipeline> {
   static readonly namespace = 'metadata.workflow.namespace';
-  private readonly stacks = new Map<keyof T, Node>();
+  private readonly stacks = new Map<keyof T, Node<T>>();
   public enterence: keyof T = null;
+
+  static execute<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
+    return Meta.get(clazz).execute(props);
+  }
+
+  static get<U extends Pipeline = Pipeline>(object: IClazz<U>): Meta<U> {
+    if (!Reflect.hasMetadata(Meta.namespace, object)) {
+      throw new TypeError('Class module must be wrapped with `@Workflow()` decorator.');
+    }
+    return Reflect.getMetadata(Meta.namespace, object);
+  }
+
   constructor(public readonly clazz: IClazz<T>) {}
 
-  public addStack(name: keyof T, fn: Node) {
+  public addStack(name: keyof T, fn: Node<T>) {
     this.stacks.set(name, fn);
     return this;
   }
@@ -32,18 +44,24 @@ export class Meta<T extends Pipeline = Pipeline> {
     // @ts-ignore
     if (typeof obj[name] !== 'function') throw new TypeError(`class name [${name.toString()}] is not a function`);
     const node = this.stacks.get(name);
-    const next: INext<T> = n => this.run(n, obj);
+    const next: INext<T> = async n => {
+      await node.executeInSuffix(obj);
+      if (n) {
+        await this.run(n, obj);
+      }
+    }
     await node.executeInPrefix(obj);
-    // @ts-ignore
-    await Promise.resolve(obj[name](next));
-    await node.executeInSuffix(obj);
+    if (typeof obj[name] === 'function') {
+      // @ts-ignore
+      await Promise.resolve(obj[name](next));
+    }
   }
 
   public hook(name: keyof T) {
     if (!this.stacks.has(name)) {
       throw new Error(`'${name.toString()}' is not a hook`);
     }
-    return this.stacks.get(name);
+    return this.stacks.get(name) as Node<T>;
   }
 }
 
@@ -75,11 +93,4 @@ export function Flow<T extends Pipeline = Pipeline>(enterence: boolean = false):
       meta.enterence = key as any;
     }
   }
-}
-
-export function getMeta<T extends Pipeline = Pipeline>(object: IClazz<T>): Meta<T> {
-  if (!Reflect.hasMetadata(Meta.namespace, object)) {
-    throw new TypeError('Class module must be wrapped with `@Workflow()` decorator.');
-  }
-  return Reflect.getMetadata(Meta.namespace, object);
 }
