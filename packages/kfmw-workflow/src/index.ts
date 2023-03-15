@@ -51,9 +51,7 @@ export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> 
     if (this.req?.keys) {
       this.koa.keys = this.req.keys;
     }
-    this.koa.use(async (ctx, next) => {
-      await this.fmw.routes()(ctx, next);
-    });
+    this.koa.use(this.fmw.routes());
     await next('createServer');
   }
 
