@@ -46,7 +46,11 @@ export function listen(time: number = 100) {
       }
     }
   }, time);
-  return () => clearInterval(timer);
+  return async () => {
+    const nodes = Array.from(components.keys()).map(meta => meta.clazz);
+    await Promise.all(nodes.map(node => terminateComponent(node)));
+    clearInterval(timer);
+  }
 }
 
 function executeCommander(meta: Meta, commander: IMetaCommader) {
