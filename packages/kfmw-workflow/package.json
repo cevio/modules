@@ -1,0 +1,26 @@
+{
+  "name": "@evio/kfmw-workflow",
+  "version": "1.0.0",
+  "description": "some description",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@evio/workflow": "^1.0.2",
+    "@types/koa": "^2.13.5",
+    "koa": "^2.14.1",
+    "koa-router-find-my-way": "^5.0.0"
+  }
+}

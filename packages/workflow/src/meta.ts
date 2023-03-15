@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Pipeline, PickPipelineRequest } from './pipeline';
+import { Pipeline, PickPipelineRequest, PickPipelineResponse } from './pipeline';
 import { Node } from './node';
 
 export interface IClazz<T extends Pipeline = Pipeline> {
@@ -19,7 +19,7 @@ export class Meta<T extends Pipeline = Pipeline> {
     return this;
   }
 
-  public async execute(req: PickPipelineRequest<T>) {
+  public async execute(req: PickPipelineRequest<T>): Promise<PickPipelineResponse<T>> {
     const obj = new this.clazz(req);
     if (this.enterence && this.stacks.has(this.enterence)) {
       await this.run(this.enterence, obj);
