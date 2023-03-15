@@ -111,7 +111,7 @@ export class Node<T extends Pipeline = Pipeline> {
       .map(node => node.fn);
   }
 
-  public del(name: string) {
+  public delete(name: string) {
     if (this.prefix.has(name)) {
       this.prefix.delete(name);
     } else if (this.suffix.has(name)) {
