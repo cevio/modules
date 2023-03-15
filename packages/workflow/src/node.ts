@@ -110,4 +110,12 @@ export class Node<T extends Pipeline = Pipeline> {
       .sort((prev, next) => prev.index - next.index)
       .map(node => node.fn);
   }
+
+  public del(name: string) {
+    if (this.prefix.has(name)) {
+      this.prefix.delete(name);
+    } else if (this.suffix.has(name)) {
+      this.suffix.delete(name);
+    }
+  }
 }
