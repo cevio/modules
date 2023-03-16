@@ -2,15 +2,21 @@ import Koa, { Context } from 'koa';
 import FindMyWay, { Instance } from 'koa-router-find-my-way';
 import { Workflow, Pipeline, Flow, INext, Meta } from '@evio/workflow';
 import { createServer, Server } from 'node:http';
+import { koaBody, KoaBodyMiddlewareOptions } from 'koa-body';
 
+export type IRouteSkipper = (ctx: Context) => boolean | Promise<boolean>;
 export interface IRequest {
   keys?: string[],
   port: number,
-  ignoreDuplicateSlashes?: boolean,
-  ignoreTrailingSlash?: boolean,
-  maxParamLength?: number,
-  allowUnsafeRegex?: boolean,
-  caseSensitive?: boolean,
+  body?: KoaBodyMiddlewareOptions,
+  skip?: IRouteSkipper,
+  router?: {
+    ignoreDuplicateSlashes?: boolean,
+    ignoreTrailingSlash?: boolean,
+    maxParamLength?: number,
+    allowUnsafeRegex?: boolean,
+    caseSensitive?: boolean,
+  }
 }
 
 export interface IResponse {
@@ -18,6 +24,11 @@ export interface IResponse {
   fmw: Instance,
   server: Server,
 }
+
+export * from './exception';
+export * from './meta';
+export * from './request';
+export * from './route';
 
 @Workflow()
 export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> {
@@ -29,29 +40,54 @@ export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> 
     return Meta.execute(KoaFindMyWayWorkflow, props);
   }
 
+  static hook<T extends keyof KoaFindMyWayWorkflow>(name: T) {
+    return Meta.get(KoaFindMyWayWorkflow).hook(name);
+  }
+
   constructor(req: IRequest) {
+    const routerOptions = req.router || {};
     super(req, {
       koa: null,
       server: null,
       fmw: null,
     });
     this.fmw = FindMyWay({
-      ignoreDuplicateSlashes: req.ignoreDuplicateSlashes,
-      ignoreTrailingSlash: req.ignoreTrailingSlash,
-      maxParamLength: req.maxParamLength,
-      allowUnsafeRegex: req.allowUnsafeRegex,
-      caseSensitive: req.caseSensitive,
+      ignoreDuplicateSlashes: routerOptions.ignoreDuplicateSlashes,
+      ignoreTrailingSlash: routerOptions.ignoreTrailingSlash,
+      maxParamLength: routerOptions.maxParamLength,
+      allowUnsafeRegex: routerOptions.allowUnsafeRegex,
+      caseSensitive: routerOptions.caseSensitive,
       // @ts-ignore
       defaultRoute: async (ctx: Context, next: Next) => await next(),
     })
   }
 
   @Flow(true)
-  public async addDefaultMiddleware(next: INext<this>) {
+  public async setKeys(next: INext<this>) {
     if (this.req?.keys) {
       this.koa.keys = this.req.keys;
     }
-    this.koa.use(this.fmw.routes());
+    await next('addKoaBody');
+  }
+
+  @Flow()
+  public async addKoaBody(next: INext<this>) {
+    this.koa.use(koaBody(this.req.body));
+    await next('addRouters');
+  }
+
+  @Flow()
+  public async addRouters(next: INext<this>) {
+    if ( typeof this.req.skip === 'function') {
+      this.koa.use(async (ctx, next) => {
+        if (await Promise.resolve(this.req.skip(ctx))) {
+          return await next();
+        }
+        await this.fmw.routes()(ctx, next);
+      })
+    } else {
+      this.koa.use(this.fmw.routes());
+    }
     await next('createServer');
   }
 
