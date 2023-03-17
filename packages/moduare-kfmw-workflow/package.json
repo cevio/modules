@@ -1,6 +1,6 @@
 {
   "name": "@evio/moduare-kfmw-workflow",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@evio/kfmw-workflow": "^1.0.5",
+    "@evio/kfmw-workflow": "^1.0.6",
     "@evio/moduare": "^1.0.6",
     "socket.io": "^4.6.1"
   }
