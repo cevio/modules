@@ -23,6 +23,7 @@ export class Route<I extends Request = Request, O = any, S = any> extends Pipeli
       maxAge,
       expires,
     })
+    return expires;
   }
 
   public delCookie(key: string) {
