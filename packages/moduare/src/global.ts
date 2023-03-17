@@ -86,8 +86,11 @@ function checkTerminatable(meta: Meta): boolean {
   if (!meta.instance) return false;
   for (const node of meta.dependents.values()) {
     const nodeMeta = Meta.get(node);
-    if (!components.has(nodeMeta)) return false;
-    if (!!nodeMeta.instance) return false;
+    if (components.has(nodeMeta)) {
+      if (!!nodeMeta.instance) {
+        return false;
+      }
+    }
   }
   return true;
 }
