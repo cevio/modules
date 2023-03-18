@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import type { Middleware } from 'koa';
 import type { HTTPMethod } from 'find-my-way';
 import type { Instance } from 'koa-router-find-my-way';
-import { Route, IClazz } from './route';
+import { Route, IClazz, PickRouteRequest, PickRouteResponse } from './route';
 import { Request } from './request';
 import { Meta as WMeta } from '@evio/workflow';
 import { HttpException } from './exception';
@@ -17,6 +17,11 @@ export class Meta<T extends Route = Route> {
       throw new TypeError('Class module must be wrapped with `@Controller()` decorator.');
     }
     return Reflect.getMetadata(Meta.namespace, object);
+  }
+
+  static execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<PickRouteResponse<T>> {
+    // @ts-ignore
+    return WMeta.get(clazz).execute(props);
   }
 
   constructor(private readonly clazz: IClazz<T>) {}
