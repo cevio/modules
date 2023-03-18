@@ -5,11 +5,10 @@ export interface IClazz<T extends Route = Route> {
   new (req: PickRouteRequest<T>): T;
 }
 
-export type PickRouteRequest<T> = T extends Route<infer U, any, any> ? U : unknown;
-export type PickRouteResponse<T> = T extends Route<any, infer U, any> ? U : unknown;
-export type PickRouteStorage<T> = T extends Route<any, any, infer U> ? U : unknown;
+export type PickRouteRequest<T> = T extends Route<infer U, any> ? U : unknown;
+export type PickRouteResponse<T> = T extends Route<any, infer U> ? U : unknown;
 
-export class Route<I extends Request = Request, O = any, S = any> extends Pipeline<I, O, S> {
+export class Route<I extends Request = Request, O = any> extends Pipeline<I, O> {
   get ctx() {
     return this.req.ctx;
   }
