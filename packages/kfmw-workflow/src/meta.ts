@@ -29,8 +29,7 @@ export class Meta<T extends Route = Route> {
   private register(fmw: Instance, method: HTTPMethod, path: string) {
     fmw.on(method, path, ...this.middlewares, async ctx => {
       try {
-        const req = new Request(ctx);
-        ctx.body = await WMeta.get(this.clazz as any).execute(req);
+        ctx.body = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
         ctx.status = 200;
       } catch (e) {
         if (e instanceof HttpException) {
