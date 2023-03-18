@@ -8,13 +8,21 @@ export interface IHeaders extends IncomingHttpHeaders {
   [key: string]: string | string[],
 }
 
-export class Request<IBody = unknown> {
-  public readonly params: Record<string, string> = {};
-  public readonly query: ParsedUrlQuery = {};
-  public readonly headers: IHeaders = {};
-  public readonly state: Record<string | symbol, any> = {};
+export interface IRequestProps {
+  query?: ParsedUrlQuery,
+  params?: Record<string, string>,
+  body?: any,
+  headers?: IHeaders,
+  state?: Record<string | symbol, any>,
+}
+
+export class Request<T extends IRequestProps = IRequestProps> {
+  public readonly params: T['params'] = {};
+  public readonly query: T['query'] = {};
+  public readonly headers: T['headers'] = {};
+  public readonly state: T['state'] = {};
   public readonly files: Record<string, File | File[]> = {};
-  public body: IBody = null;
+  public body: T['body'] = null;
   public ip: string = null;
   public cookies: Context['cookies'] = null;
   
@@ -31,22 +39,22 @@ export class Request<IBody = unknown> {
     }
   }
 
-  public setParam(key: string, value: string) {
+  public setParam<M extends keyof T['params']>(key: M, value: T['params'][M]) {
     this.params[key] = value;
     return this;
   }
 
-  public setQuery(key: string, value: string | string[]) {
+  public setQuery<Q extends keyof T['query']>(key: Q, value: T['query'][Q]) {
     this.query[key] = value;
     return this;
   }
 
-  public setHeader(key: string, value: string | string[]) {
+  public setHeader<H extends keyof T['headers']>(key: H, value: T['headers'][H]) {
     this.headers[key] = value;
     return this;
   }
 
-  public setBody(body: IBody) {
+  public setBody(body: T['body']) {
     this.body = body;
     return this;
   }
@@ -56,7 +64,7 @@ export class Request<IBody = unknown> {
     return this;
   }
 
-  public setState(key: string | symbol, value: any) {
+  public setState<S extends keyof T['state']>(key: S, value: T['state'][S]) {
     this.state[key] = value;
     return this;
   }
