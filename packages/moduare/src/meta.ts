@@ -36,6 +36,17 @@ export class Meta<T extends Component = Component> extends EventEmitter {
     this.setMaxListeners(+Infinity);
   }
 
+  public addDependency<T extends Component = Component>(clazz: IClazz<T>) {
+    const _meta = Meta.get(clazz);
+    if (!_meta.dependents.has(this.clazz)) {
+      _meta.dependents.add(this.clazz);
+    }
+    if (!this.dependencies.has(clazz)) {
+      this.dependencies.add(clazz);
+    }
+    return this;
+  }
+
   public initialize(props: PickComponentProps<T>) {
     this.instance = new this.clazz(props);
     this.instance.__status__ = 0;
