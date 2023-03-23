@@ -1,6 +1,6 @@
 {
   "name": "@evio/workflow",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
