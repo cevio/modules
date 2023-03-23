@@ -1,7 +1,7 @@
 export type PickPipelineRequest<T> = T extends Pipeline<infer U, any> ? U : unknown;
 export type PickPipelineResponse<T> = T extends Pipeline<any, infer U> ? U : unknown;
 
-type IHandler = (e?: any) => void | Promise<void>;
+type IHandler = (e?: any) => unknown | Promise<unknown>;
 type IName = 'open' | 'commit' | 'rollback' | 'close';
 
 export class Pipeline<Input = any, Output = any> extends Map {
