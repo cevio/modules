@@ -34,10 +34,12 @@ export class Meta<T extends Pipeline = Pipeline> {
   public async execute(req: PickPipelineRequest<T>): Promise<PickPipelineResponse<T>> {
     const obj = new this.clazz(req);
     if (this.enterence && this.stacks.has(this.enterence)) {
+      await obj.__execTransitionsByName__('start');
       try {
         await this.run(this.enterence, obj);
+        await obj.__execTransitionsByName__('commit');
       } catch (e) {
-        await obj.__rollback__();
+        await obj.__execTransitionsByName__('rollback', e);
         throw e;
       }
     }

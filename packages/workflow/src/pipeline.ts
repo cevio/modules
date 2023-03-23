@@ -1,8 +1,12 @@
 export type PickPipelineRequest<T> = T extends Pipeline<infer U, any> ? U : unknown;
 export type PickPipelineResponse<T> = T extends Pipeline<any, infer U> ? U : unknown;
 
+type IHandler = (e?: any) => void | Promise<void>;
+type IName = 'start' | 'commit' | 'rollback';
+
 export class Pipeline<Input = any, Output = any> extends Map {
-  private readonly __rollbacks__: (() => void | Promise<void>)[] = [];
+  private readonly __transitions__ = new Map<IName, IHandler[]>();
+
   constructor(
     public readonly req: Input,
     public res: Output,
@@ -10,15 +14,44 @@ export class Pipeline<Input = any, Output = any> extends Map {
     super();
   }
 
-  public add(fn: () => void | Promise<void>) {
-    this.__rollbacks__.push(fn);
+  public on<T extends IName>(name: T, fn: IHandler) {
+    if (!this.__transitions__.has(name)) {
+      this.__transitions__.set(name, []);
+    }
+    const chunks = this.__transitions__.get(name);
+    if (!chunks.includes(fn)) {
+      if (name === 'rollback') {
+        chunks.unshift(fn);
+      } else {
+        chunks.push(fn);
+      }
+    }
     return this;
   }
 
-  public async __rollback__() {
-    for (let i = 0; i < this.__rollbacks__.length; i++) {
-      const rollback = this.__rollbacks__[i];
-      await Promise.resolve(rollback());
+  public off<T extends IName>(name: T, fn?: IHandler) {
+    if (!this.__transitions__.has(name)) return;
+    if (!fn) {
+      this.__transitions__.delete(name);
+    } else {
+      const chunks = this.__transitions__.get(name);
+      const index = chunks.indexOf(fn);
+      if (index > -1) {
+        chunks.splice(index, 1);
+      }
+      if (!chunks.length) {
+        this.__transitions__.delete(name);
+      }
     }
+    return this;
+  }
+
+  public async __execTransitionsByName__<T extends IName>(name: T, e?: any) {
+    if (!this.__transitions__.has(name)) return;
+    const chunks = this.__transitions__.get(name);
+    for (let i = 0; i < chunks.length; i++) {
+      await Promise.resolve(chunks[i](e));
+    }
+    return this;
   }
 }
