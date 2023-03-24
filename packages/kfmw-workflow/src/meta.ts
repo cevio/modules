@@ -38,11 +38,10 @@ export class Meta<T extends Route = Route> {
         ctx.status = 200;
         await this.exec('commit');
       } catch (e) {
-        await this.exec('rollback', e);
-
         // 当遇到NextException错误
         // 系统执行下一个中间件
         if (e instanceof NextException) {
+          await this.exec('commit');
           return await next();
         }
 
@@ -50,18 +49,21 @@ export class Meta<T extends Route = Route> {
         // 根据错误类型执行
         if (e instanceof HttpException) {
           if ([301, 302, 307].includes(e.status)) {
+            await this.exec('commit');
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.redirect(e.message);
             return;
           } else if (e.status >= 200 && e.status < 300) {
+            await this.exec('commit');
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.body = e.message;
             return;
           }
         }
-
+        
+        await this.exec('rollback', e);
         // 未知错误抛出
         throw e;
       } finally {
