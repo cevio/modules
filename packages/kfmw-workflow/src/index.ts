@@ -25,7 +25,6 @@ export interface IResponse {
   server: Server,
 }
 
-export * from './exception';
 export * from './meta';
 export * from './request';
 export * from './route';
@@ -36,8 +35,9 @@ export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> 
   public readonly koa = new Koa();
   public readonly fmw: Instance;
 
-  static create(props: IRequest) {
-    return Meta.execute(KoaFindMyWayWorkflow, props);
+  static async create(props: IRequest) {
+    const obj = await Meta.execute(KoaFindMyWayWorkflow, props);
+    return obj.res;
   }
 
   static hook<T extends keyof KoaFindMyWayWorkflow>(name: T) {

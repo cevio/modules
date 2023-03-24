@@ -31,7 +31,7 @@ export class Meta<T extends Pipeline = Pipeline> {
     return this;
   }
 
-  public async execute(req: PickPipelineRequest<T>): Promise<PickPipelineResponse<T>> {
+  public async execute(req: PickPipelineRequest<T>): Promise<T> {
     const obj = new this.clazz(req);
     if (this.enterence && this.stacks.has(this.enterence)) {
       await obj.__execTransitionsByName__('prepare');
@@ -45,7 +45,7 @@ export class Meta<T extends Pipeline = Pipeline> {
         await obj.__execTransitionsByName__('finally');
       }
     }
-    return obj.res;
+    return obj;
   }
 
   private async run(name: keyof T, obj: T) {

@@ -1,9 +1,15 @@
-export class NextException {}
-export class HttpException extends Error {
+export class NextException<T> {
+  constructor(public readonly instance: T) {}
+}
+export class HttpException<T> extends Error {
   private readonly headers = new Map<string, string | number | boolean>();
   public readonly status: number;
   public code: string;
-  constructor(status: number, msg?: any) {
+  constructor(
+    public readonly instance: T,
+    status: number, 
+    msg?: any
+  ) {
     super(msg);
     this.status = status;
     this.code = 'E' + status;

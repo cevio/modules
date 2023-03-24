@@ -5,7 +5,7 @@ import type { Instance } from 'koa-router-find-my-way';
 import { Request } from './request';
 import { Meta as WMeta } from '@evio/workflow';
 import { HttpException, NextException } from './exception';
-import { Route, IClazz, PickRouteRequest, PickRouteResponse } from './route';
+import { Route, IClazz, PickRouteRequest } from './route';
 
 type IHander = (e?: any) => unknown | Promise<unknown>;
 type IName = 'prepare' | 'commit' | 'rollback' | 'finally';
@@ -23,7 +23,7 @@ export class Meta<T extends Route = Route> {
     return Reflect.getMetadata(Meta.namespace, object);
   }
 
-  static execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<PickRouteResponse<T>> {
+  static execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<T> {
     // @ts-ignore
     return WMeta.get(clazz).execute(props);
   }
@@ -34,14 +34,15 @@ export class Meta<T extends Route = Route> {
     fmw.on(method, path, ...this.middlewares, async (ctx, next) => {
       await this.exec('prepare');
       try {
-        ctx.body = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
+        const router = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
+        ctx.body = router.res;
         ctx.status = 200;
-        await this.exec('commit');
+        await this.exec('commit', router);
       } catch (e) {
         // 当遇到NextException错误
         // 系统执行下一个中间件
         if (e instanceof NextException) {
-          await this.exec('commit');
+          await this.exec('commit', e.instance);
           return await next();
         }
 
@@ -49,13 +50,13 @@ export class Meta<T extends Route = Route> {
         // 根据错误类型执行
         if (e instanceof HttpException) {
           if ([301, 302, 307].includes(e.status)) {
-            await this.exec('commit');
+            await this.exec('commit', e.instance);
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.redirect(e.message);
             return;
           } else if (e.status >= 200 && e.status < 300) {
-            await this.exec('commit');
+            await this.exec('commit', e.instance);
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.body = e.message;
