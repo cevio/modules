@@ -1,3 +1,4 @@
+export class NextException {}
 export class HttpException extends Error {
   private readonly headers = new Map<string, string | number | boolean>();
   public readonly status: number;
