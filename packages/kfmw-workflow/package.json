@@ -1,6 +1,6 @@
 {
   "name": "@evio/kfmw-workflow",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
