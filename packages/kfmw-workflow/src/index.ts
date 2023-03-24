@@ -25,6 +25,7 @@ export interface IResponse {
   server: Server,
 }
 
+export * from './exception';
 export * from './meta';
 export * from './request';
 export * from './route';

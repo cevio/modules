@@ -7,14 +7,10 @@ import { Meta as WMeta } from '@evio/workflow';
 import { HttpException, NextException } from './exception';
 import { Route, IClazz, PickRouteRequest } from './route';
 
-type IHander = (e?: any) => unknown | Promise<unknown>;
-type IName = 'prepare' | 'commit' | 'rollback' | 'finally';
-
 export class Meta<T extends Route = Route> {
   static readonly namespace = 'metadata.http.koa.find.my.way.namespace';
   public readonly controllers: { method: HTTPMethod, path: string }[] = [];
   public readonly middlewares: Middleware[] = [];
-  public readonly transitions = new Map<IName, Set<IHander>>();
 
   static get<U extends Route = Route>(object: IClazz<U>): Meta<U> {
     if (!Reflect.hasMetadata(Meta.namespace, object)) {
@@ -32,17 +28,14 @@ export class Meta<T extends Route = Route> {
 
   private register(fmw: Instance, method: HTTPMethod, path: string) {
     fmw.on(method, path, ...this.middlewares, async (ctx, next) => {
-      await this.exec('prepare');
       try {
         const router = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
         ctx.body = router.res;
         ctx.status = 200;
-        await this.exec('commit', router);
       } catch (e) {
         // 当遇到NextException错误
         // 系统执行下一个中间件
         if (e instanceof NextException) {
-          await this.exec('commit', e.instance);
           return await next();
         }
 
@@ -50,13 +43,11 @@ export class Meta<T extends Route = Route> {
         // 根据错误类型执行
         if (e instanceof HttpException) {
           if ([301, 302, 307].includes(e.status)) {
-            await this.exec('commit', e.instance);
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.redirect(e.message);
             return;
           } else if (e.status >= 200 && e.status < 300) {
-            await this.exec('commit', e.instance);
             ctx.set(e.toJSONWithHeaders());
             ctx.status = e.status;
             ctx.body = e.message;
@@ -64,11 +55,8 @@ export class Meta<T extends Route = Route> {
           }
         }
         
-        await this.exec('rollback', e);
         // 未知错误抛出
         throw e;
-      } finally {
-        await this.exec('finally');
       }
     })
   }
@@ -86,36 +74,6 @@ export class Meta<T extends Route = Route> {
       fmw.off(method, path);
     }
   }
-
-  public on<N extends IName>(name: N, fn: IHander) {
-    if (!this.transitions.has(name)) {
-      this.transitions.set(name, new Set());
-    }
-    this.transitions.get(name).add(fn);
-    return this;
-  }
-
-  public off<N extends IName>(name: N, fn?: IHander) {
-    if (!this.transitions.has(name)) return;
-    if (!fn) {
-      this.transitions.delete(name);
-    } else {
-      const fns = this.transitions.get(name);
-      if (fns.has(fn)) {
-        fns.delete(fn);
-      }
-      if (!fns.size) {
-        this.transitions.delete(name);
-      }
-    }
-    return this;
-  }
-
-  public exec<N extends IName>(name: N, e?: any) {
-    if (!this.transitions.has(name)) return;
-    const fns = this.transitions.get(name);
-    return Promise.all(Array.from(fns.values()).map(fn => Promise.resolve(fn(e))));
-  }
 }
 
 export function Controller(method: HTTPMethod, path: string): ClassDecorator {
@@ -128,7 +86,7 @@ export function Controller(method: HTTPMethod, path: string): ClassDecorator {
   }
 }
 
-Controller.Middleware = function Middleware(middleware: Middleware): ClassDecorator {
+export function Middleware(middleware: Middleware): ClassDecorator {
   return obj => {
     if (!Reflect.hasMetadata(Meta.namespace, obj)) {
       Reflect.defineMetadata(Meta.namespace, new Meta(obj as any), obj);
@@ -137,45 +95,5 @@ Controller.Middleware = function Middleware(middleware: Middleware): ClassDecora
     if (!meta.middlewares.includes(middleware)) {
       meta.middlewares.unshift(middleware);
     }
-  }
-};
-
-Controller.Prepare = (fn: IHander): ClassDecorator => {
-  return obj => {
-    if (!Reflect.hasMetadata(Meta.namespace, obj)) {
-      Reflect.defineMetadata(Meta.namespace, new Meta(obj as any), obj);
-    }
-    const meta: Meta = Reflect.getMetadata(Meta.namespace, obj);
-    meta.on('prepare', fn);
-  }
-}
-
-Controller.Commit = (fn: IHander): ClassDecorator => {
-  return obj => {
-    if (!Reflect.hasMetadata(Meta.namespace, obj)) {
-      Reflect.defineMetadata(Meta.namespace, new Meta(obj as any), obj);
-    }
-    const meta: Meta = Reflect.getMetadata(Meta.namespace, obj);
-    meta.on('commit', fn);
-  }
-}
-
-Controller.Rollback = (fn: IHander): ClassDecorator => {
-  return obj => {
-    if (!Reflect.hasMetadata(Meta.namespace, obj)) {
-      Reflect.defineMetadata(Meta.namespace, new Meta(obj as any), obj);
-    }
-    const meta: Meta = Reflect.getMetadata(Meta.namespace, obj);
-    meta.on('rollback', fn);
-  }
-}
-
-Controller.Finally = (fn: IHander): ClassDecorator => {
-  return obj => {
-    if (!Reflect.hasMetadata(Meta.namespace, obj)) {
-      Reflect.defineMetadata(Meta.namespace, new Meta(obj as any), obj);
-    }
-    const meta: Meta = Reflect.getMetadata(Meta.namespace, obj);
-    meta.on('finally', fn);
   }
 }
