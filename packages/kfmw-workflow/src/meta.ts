@@ -5,7 +5,7 @@ import type { Instance } from 'koa-router-find-my-way';
 import { Request } from './request';
 import { Meta as WMeta } from '@evio/workflow';
 import { HttpException, NextException } from './exception';
-import { Route, IClazz, PickRouteRequest } from './route';
+import { Route, IClazz, PickRouteRequest, PickRouteResponse } from './route';
 
 export class Meta<T extends Route = Route> {
   static readonly namespace = 'metadata.http.koa.find.my.way.namespace';
@@ -19,7 +19,12 @@ export class Meta<T extends Route = Route> {
     return Reflect.getMetadata(Meta.namespace, object);
   }
 
-  static execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<T> {
+  static async execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<PickRouteResponse<T>> {
+    const obj = await Meta.exec(clazz, props);
+    return obj.res;
+  }
+
+  static exec<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<T> {
     // @ts-ignore
     return WMeta.get(clazz).execute(props);
   }
@@ -29,8 +34,7 @@ export class Meta<T extends Route = Route> {
   private register(fmw: Instance, method: HTTPMethod, path: string) {
     fmw.on(method, path, ...this.middlewares, async (ctx, next) => {
       try {
-        const router = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
-        ctx.body = router.res;
+        ctx.body = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
         ctx.status = 200;
       } catch (e) {
         // 当遇到NextException错误

@@ -1,6 +1,5 @@
 import { Pipeline } from '@evio/workflow';
 import { Request, IRequestProps } from './request';
-import { NextException, HttpException } from './exception';
 
 export interface IClazz<T extends Route = Route> {
   new (req: PickRouteRequest<T>): T;
@@ -34,13 +33,5 @@ export class Route<I extends IRequestProps = IRequestProps, O = any> extends Pip
       maxAge: 0,
       expires: new Date(0),
     })
-  }
-
-  public next() {
-    return new NextException(this);
-  }
-
-  public httpException(status: number, msg?: any) {
-    return new HttpException(this, status, msg);
   }
 }

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Pipeline, PickPipelineRequest, PickPipelineResponse } from './pipeline';
+import { Pipeline, PickPipelineRequest } from './pipeline';
 import { Node } from './node';
 
 export interface IClazz<T extends Pipeline = Pipeline> {
@@ -13,7 +13,12 @@ export class Meta<T extends Pipeline = Pipeline> {
   private readonly stacks = new Map<keyof T, Node<T>>();
   public enterence: keyof T = null;
 
-  static execute<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
+  static async execute<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
+    const obj = await Meta.exec(clazz, props);
+    return obj.res;
+  }
+
+  static exec<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
     return Meta.get(clazz).execute(props);
   }
 
