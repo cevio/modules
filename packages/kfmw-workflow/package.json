@@ -23,5 +23,6 @@
     "koa": "^2.14.1",
     "koa-body": "^6.0.1",
     "koa-router-find-my-way": "^5.0.0"
-  }
+  },
+  "gitHead": "cc65ea3006e3b1c066108e9b3d30050d97e07ee9"
 }
