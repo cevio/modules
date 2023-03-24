@@ -14,7 +14,7 @@ export class Meta<T extends Route = Route> {
   static readonly namespace = 'metadata.http.koa.find.my.way.namespace';
   public readonly controllers: { method: HTTPMethod, path: string }[] = [];
   public readonly middlewares: Middleware[] = [];
-  public readonly transitions = new Map<IName, IHander[]>();
+  public readonly transitions = new Map<IName, Set<IHander>>();
 
   static get<U extends Route = Route>(object: IClazz<U>): Meta<U> {
     if (!Reflect.hasMetadata(Meta.namespace, object)) {
@@ -86,14 +86,9 @@ export class Meta<T extends Route = Route> {
 
   public on<N extends IName>(name: N, fn: IHander) {
     if (!this.transitions.has(name)) {
-      this.transitions.set(name, []);
+      this.transitions.set(name, new Set());
     }
-    const fns = this.transitions.get(name);
-    if (name === 'rollback') {
-      fns.unshift(fn);
-    } else {
-      fns.push(fn);
-    }
+    this.transitions.get(name).add(fn);
     return this;
   }
 
@@ -103,23 +98,20 @@ export class Meta<T extends Route = Route> {
       this.transitions.delete(name);
     } else {
       const fns = this.transitions.get(name);
-      const index = fns.indexOf(fn);
-      if (index > -1) {
-        fns.splice(index, 1);
+      if (fns.has(fn)) {
+        fns.delete(fn);
       }
-      if (!fns.length) {
+      if (!fns.size) {
         this.transitions.delete(name);
       }
     }
     return this;
   }
 
-  public async exec<N extends IName>(name: N, e?: any) {
+  public exec<N extends IName>(name: N, e?: any) {
     if (!this.transitions.has(name)) return;
     const fns = this.transitions.get(name);
-    for (let i = 0; i < fns.length; i++) {
-      await Promise.resolve(fns[i](e));
-    }
+    return Promise.all(Array.from(fns.values()).map(fn => Promise.resolve(fn(e))));
   }
 }
 
