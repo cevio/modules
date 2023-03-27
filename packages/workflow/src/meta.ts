@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { Pipeline, PickPipelineRequest } from './pipeline';
 import { Node } from './node';
 
-export interface IClazz<T extends Pipeline = Pipeline> {
+export interface IClazz<T> {
   new (req: PickPipelineRequest<T>): T;
 }
 

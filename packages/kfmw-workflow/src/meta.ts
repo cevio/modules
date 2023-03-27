@@ -1,31 +1,30 @@
 import 'reflect-metadata';
+import { Route } from './route';
+import { Request } from './request';
+import { HttpException, NextException } from './exception';
+import { Meta as WMeta, IClazz, PickPipelineRequest, PickPipelineResponse } from '@evio/workflow';
 import type { Middleware } from 'koa';
 import type { HTTPMethod } from 'find-my-way';
 import type { Instance } from 'koa-router-find-my-way';
-import { Request } from './request';
-import { Meta as WMeta } from '@evio/workflow';
-import { HttpException, NextException } from './exception';
-import { Route, IClazz, PickRouteRequest, PickRouteResponse } from './route';
 
 export class Meta<T extends Route = Route> {
   static readonly namespace = 'metadata.http.koa.find.my.way.namespace';
   public readonly controllers: { method: HTTPMethod, path: string }[] = [];
   public readonly middlewares: Middleware[] = [];
 
-  static get<U extends Route = Route>(object: IClazz<U>): Meta<U> {
+  static get<U extends Route>(object: IClazz<U>): Meta<U> {
     if (!Reflect.hasMetadata(Meta.namespace, object)) {
       throw new TypeError('Class module must be wrapped with `@Controller()` decorator.');
     }
     return Reflect.getMetadata(Meta.namespace, object);
   }
 
-  static async execute<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<PickRouteResponse<T>> {
+  static async execute<T extends Route>(clazz: IClazz<T>, props: PickPipelineRequest<T>): Promise<PickPipelineResponse<T>> {
     const obj = await Meta.exec(clazz, props);
     return obj.res;
   }
 
-  static exec<T extends Route>(clazz: IClazz<T>, props: Request<PickRouteRequest<T>>): Promise<T> {
-    // @ts-ignore
+  static exec<T extends Route>(clazz: IClazz<T>, props: PickPipelineRequest<T>): Promise<T> {
     return WMeta.get(clazz).execute(props);
   }
 
@@ -34,7 +33,7 @@ export class Meta<T extends Route = Route> {
   private register(fmw: Instance, method: HTTPMethod, path: string) {
     fmw.on(method, path, ...this.middlewares, async (ctx, next) => {
       try {
-        ctx.body = await Meta.execute(this.clazz, new Request<PickRouteRequest<T>>(ctx));
+        ctx.body = await Meta.execute(this.clazz, new Request(ctx) as PickPipelineRequest<T>);
         ctx.status = 200;
       } catch (e) {
         // 当遇到NextException错误
