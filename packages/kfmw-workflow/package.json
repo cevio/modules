@@ -1,6 +1,6 @@
 {
   "name": "@evio/kfmw-workflow",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@evio/workflow": "^1.0.15",
+    "@evio/workflow": "^1.0.16",
     "@types/koa": "^2.13.5",
     "koa": "^2.14.1",
     "koa-body": "^6.0.1",
