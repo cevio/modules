@@ -2,12 +2,12 @@ import 'reflect-metadata';
 import { Route } from './route';
 import { Request } from './request';
 import { HttpException, NextException } from './exception';
-import { Meta as WMeta, IClazz, PickPipelineRequest, PickPipelineResponse } from '@evio/workflow';
+import { Meta as WMeta, IClazz, PickPipelineProps } from '@evio/workflow';
 import type { Middleware } from 'koa';
 import type { HTTPMethod } from 'find-my-way';
 import type { Instance } from 'koa-router-find-my-way';
 
-export class Meta<T extends Route = Route> {
+export class Meta<T extends Route> {
   static readonly namespace = 'metadata.http.koa.find.my.way.namespace';
   public readonly controllers: { method: HTTPMethod, path: string }[] = [];
   public readonly middlewares: Middleware[] = [];
@@ -19,12 +19,12 @@ export class Meta<T extends Route = Route> {
     return Reflect.getMetadata(Meta.namespace, object);
   }
 
-  static async execute<T extends Route>(clazz: IClazz<T>, props: PickPipelineRequest<T>): Promise<PickPipelineResponse<T>> {
+  static async execute<T extends Route>(clazz: IClazz<T>, props: PickPipelineProps<T>[0]): Promise<PickPipelineProps<T>[1]> {
     const obj = await Meta.exec(clazz, props);
     return obj.res;
   }
 
-  static exec<T extends Route>(clazz: IClazz<T>, props: PickPipelineRequest<T>): Promise<T> {
+  static exec<T extends Route>(clazz: IClazz<T>, props: PickPipelineProps<T>[0]): Promise<T> {
     return WMeta.get(clazz).execute(props);
   }
 
@@ -33,7 +33,7 @@ export class Meta<T extends Route = Route> {
   private register(fmw: Instance, method: HTTPMethod, path: string) {
     fmw.on(method, path, ...this.middlewares, async (ctx, next) => {
       try {
-        ctx.body = await Meta.execute(this.clazz, new Request(ctx) as PickPipelineRequest<T>);
+        ctx.body = await Meta.execute(this.clazz, new Request(ctx));
         ctx.status = 200;
       } catch (e) {
         // 当遇到NextException错误

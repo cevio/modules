@@ -12,7 +12,7 @@ interface INodeSortProps extends INodeProps {
   index: number,
 }
 
-export class Node<T extends Pipeline = Pipeline> {
+export class Node<T extends Pipeline> {
   public readonly prefix = new Map<string, INodeProps>();
   public readonly suffix = new Map<string, INodeProps>();
 

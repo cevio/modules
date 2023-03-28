@@ -1,28 +1,28 @@
 import 'reflect-metadata';
-import { Pipeline, PickPipelineRequest } from './pipeline';
+import { Pipeline, PickPipelineProps } from './pipeline';
 import { Node } from './node';
 
 export interface IClazz<T> {
-  new (req: PickPipelineRequest<T>): T;
+  new (req: PickPipelineProps<T>[0]): T;
 }
 
 export type INext<T extends Pipeline> = (name?: keyof T) => Promise<void>;
 
-export class Meta<T extends Pipeline = Pipeline> {
+export class Meta<T extends Pipeline> {
   static readonly namespace = 'metadata.workflow.namespace';
   private readonly stacks = new Map<keyof T, Node<T>>();
   public enterence: keyof T = null;
 
-  static async execute<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
+  static async execute<U extends Pipeline>(clazz: IClazz<U>, props: PickPipelineProps<U>[0]): Promise<PickPipelineProps<U>[1]> {
     const obj = await Meta.exec(clazz, props);
     return obj.res;
   }
 
-  static exec<U extends Pipeline = Pipeline>(clazz: IClazz<U>, props: PickPipelineRequest<U>) {
+  static exec<U extends Pipeline>(clazz: IClazz<U>, props: PickPipelineProps<U>[0]): Promise<U> {
     return Meta.get(clazz).execute(props);
   }
 
-  static get<U extends Pipeline = Pipeline>(object: IClazz<U>): Meta<U> {
+  static get<U extends Pipeline>(object: IClazz<U>): Meta<U> {
     if (!Reflect.hasMetadata(Meta.namespace, object)) {
       throw new TypeError('Class module must be wrapped with `@Workflow()` decorator.');
     }
@@ -36,7 +36,7 @@ export class Meta<T extends Pipeline = Pipeline> {
     return this;
   }
 
-  public async execute(req: PickPipelineRequest<T>): Promise<T> {
+  public async execute(req: PickPipelineProps<T>[0]): Promise<T> {
     const obj = new this.clazz(req);
     if (this.enterence && this.stacks.has(this.enterence)) {
       await obj.__execTransitionsByName__('prepare');
@@ -87,7 +87,7 @@ export function Workflow(): ClassDecorator {
   }
 }
 
-export function Flow<T extends Pipeline = Pipeline>(enterence: boolean = false): MethodDecorator {
+export function Flow<T extends Pipeline>(enterence: boolean = false): MethodDecorator {
   return (obj, key) => {
     const ctor = obj.constructor as IClazz<T>;
 
@@ -95,8 +95,8 @@ export function Flow<T extends Pipeline = Pipeline>(enterence: boolean = false):
       Reflect.defineMetadata(Meta.namespace, new Meta(ctor), ctor);
     }
 
-    const meta: Meta = Reflect.getMetadata(Meta.namespace, ctor);
-    const node = new Node();
+    const meta: Meta<T> = Reflect.getMetadata(Meta.namespace, ctor);
+    const node = new Node<T>();
 
     meta.addStack(key as any, node);
 

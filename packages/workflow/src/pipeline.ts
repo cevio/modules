@@ -1,5 +1,6 @@
-export type PickPipelineRequest<T> = T extends Pipeline<infer U, any> ? U : never;
-export type PickPipelineResponse<T> = T extends Pipeline<any, infer U> ? U : never;
+export type PickPipelineProps<T> = T extends Pipeline<infer Request, infer Response>
+  ? [Request, Response]
+  : [never, never];
 
 type IHandler = (e?: any) => unknown | Promise<unknown>;
 type IName = 'prepare' | 'commit' | 'rollback' | 'finally';
