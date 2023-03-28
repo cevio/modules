@@ -36,9 +36,8 @@ export default class KoaFindMyWayWorkflow extends Pipeline<IRequest, IResponse> 
   public readonly koa = new Koa();
   public readonly fmw: Instance;
 
-  static async create(props: IRequest) {
-    const obj = await Meta.execute(KoaFindMyWayWorkflow, props);
-    return obj.res;
+  static create(props: IRequest) {
+    return Meta.execute(KoaFindMyWayWorkflow, props);
   }
 
   static hook<T extends keyof KoaFindMyWayWorkflow>(name: T) {
