@@ -23,7 +23,9 @@ export function terminateComponent<T extends Component = Component>(clazz: IClaz
   executeCommander(meta, 'terminate');
   return new Promise<void>((resolve, reject) => {
     // 有错误直接完成
-    if (meta.instance.__status__ === -1) return resolve();
+    if ([undefined, -1].includes(meta?.instance?.__status__)) {
+      return resolve();
+    }
     const handler = (e?: any) => {
       meta.off('terminate', handler);
       if (e) return reject(e);
