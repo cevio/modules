@@ -1,6 +1,6 @@
 import { Meta } from './meta';
 
-export type IComponentSetupReturnType = void | Promise<void> | (() => void | Promise<void>);
+export type IComponentSetupReturnType = unknown | Promise<unknown> | (() => unknown | Promise<unknown>);
 export type PickComponentProps<T> = T extends Component<infer P> ? P : unknown;
 export interface IClazz<T extends Component = Component> {
   new(props: PickComponentProps<T>): T;
