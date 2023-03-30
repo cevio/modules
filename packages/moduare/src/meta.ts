@@ -69,6 +69,7 @@ export class Meta<T extends Component = Component> extends EventEmitter {
     const instance = this.instance;
     if (typeof instance.__terminater__ !== 'function') {
       this.instance = null;
+      this.emit('terminate');
       return;
     }
 
