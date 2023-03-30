@@ -22,6 +22,8 @@ export function terminateComponent<T extends Component = Component>(clazz: IClaz
   if (!components.has(meta)) return Promise.reject(new Error('Component is not exists'));
   executeCommander(meta, 'terminate');
   return new Promise<void>((resolve, reject) => {
+    // 有错误直接完成
+    if (meta.instance.__status__ === -1) return resolve();
     const handler = (e?: any) => {
       meta.off('terminate', handler);
       if (e) return reject(e);
