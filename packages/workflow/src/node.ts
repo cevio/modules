@@ -117,5 +117,6 @@ export class Node<T extends Pipeline> {
     } else if (this.suffix.has(name)) {
       this.suffix.delete(name);
     }
+    return this;
   }
 }
