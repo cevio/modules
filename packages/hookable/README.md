@@ -9,17 +9,15 @@ import { Hook } from '@pjblog/hookable';
 import type { Next } from '@pjblog/hookable';
 
 class ABC extends Hook<number, number> {
-  constructor(req: number) {
-    super(req, 0);
-  }
-
-  @Hook.Main()
-  async a(next: Next<this>) {
+  public res = 0;
+  
+  @Hook.Entry()
+  async a(next: Next<ABC>) {
     this.res += this.req * 2;
     await next('b');
   }
 
-  async b(next: Next<this>) {
+  async b(next: Next<ABC>) {
     this.res += this.req * 3;
     await next();
   }
