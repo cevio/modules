@@ -1,7 +1,11 @@
 import type { Hook } from './hook';
 
 export type NextKeys<T> = {
-  [K in keyof T]: T[K] extends (next?: Next<T>) => Promise<void> ? K : never
+  [K in keyof T]: K extends 'hook'
+    ? never 
+    : T[K] extends (next?: Next<T>) => Promise<void> 
+      ? K 
+      : never
 }[keyof T];
 
 export type PickHook<T> = T extends Hook<infer I, infer O> ? [I, O] : [never, never];

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Node } from './node';
-import type { Next } from './types';
+import type { Next, NextKeys } from './types';
 
 const NAMESPACE_MAIN = 'metadata.hook.main.namespace';
 const SYMBOLS_MAIN = Symbol('main');
@@ -50,7 +50,7 @@ export abstract class Hook<I, O> {
     }
   }
 
-  public hook(key: keyof this) {
+  public hook(key: NextKeys<this>) {
     const fn = this[key] as Function;
     
     // Hook名必须存在

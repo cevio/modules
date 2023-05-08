@@ -11,7 +11,7 @@ import type { Next } from '@pjblog/hookable';
 class ABC extends Hook<number, number> {
   public res = 0;
   
-  @Hook.Entry()
+  @Hook.Entry
   async a(next: Next<ABC>) {
     this.res += this.req * 2;
     await next('b');
