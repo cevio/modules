@@ -8,11 +8,11 @@ export type HookKeys<T> = {
       : never
 }[keyof T];
 
-export type PickHook<T> = T extends Hook<infer I, infer O, infer P> ? [I, O, P] : [never, never, []];
+export type PickHook<T> = T extends Hook<infer I, infer O> ? [I, O] : [never, never];
 export type INodeFunction<T> = (obj: T) => unknown | Promise<unknown>;
 
 export interface IClazz<T> {
-  new (req: PickHook<T>[0], res?: PickHook<T>[1]): T;
+  new (req: PickHook<T>[0]): T;
 }
 
 export interface INodeProps<T> {

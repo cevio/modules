@@ -6,14 +6,14 @@
 
 ```ts
 import { Hook } from '@pjblog/hookable';
-import type { Next } from '@pjblog/hookable';
 
-class ABC extends Hook<number, number, [number]> {
+class ABC extends Hook<number, number> {
   public res = 0;
   
+  @Hook.Entry
   @Hook.Node
-  public async initialize(a: number) {
-    this.res += this.req * 2 + a;
+  public async a() {
+    this.res += this.req * 2;
     const j = await this.b(4);
     this.res += j;
   }
@@ -29,26 +29,26 @@ class ABC extends Hook<number, number, [number]> {
 
 const obj = new ABC(99);
 
-obj.$hook('initialize').before('c', o => {
+obj.$hook('b').before('c', o => {
   console.log('c')
   o.res += 1;
 })
 
-obj.$hook('initialize').insertAfter('c', 'd', o => {
+obj.$hook('b').insertAfter('c', 'd', o => {
   console.log('d')
   o.res += 1;
 })
 
-obj.$hook('initialize').insertBefore('c', 'e', o => {
+obj.$hook('b').insertBefore('c', 'e', o => {
   console.log('e')
   o.res -= 1;
 })
 
-obj.$execute(35).then(console.log).catch(console.error);
+obj.$execute().then(console.log).catch(console.error);
 
 // output：
 // e
 // c
 // d
-// 536
+// 501
 ```

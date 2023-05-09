@@ -2,14 +2,38 @@ import 'reflect-metadata';
 import { Node } from './node';
 import type { HookKeys } from './types';
 
+const NAMESPACE_MAIN = 'metadata.hook.main.namespace';
+const SYMBOLS_MAIN = Symbol('main');
 const SYMBOLS_FLOWS = Symbol('flows');
 
-export abstract class Hook<I, O, P extends any[] = []> {
+export abstract class Hook<I, O> {
   public abstract res: O;
-  public abstract initialize(...args: P): Promise<unknown>;
+  private readonly [SYMBOLS_MAIN]: keyof this;
   private readonly [SYMBOLS_FLOWS] = new Map<keyof this, Node<this>>();
 
-  constructor(public readonly req: I) {}
+  constructor(public readonly req: I) {
+    const ctor = Object.getPrototypeOf(this).constructor;
+    if (Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
+      this[SYMBOLS_MAIN] = Reflect.getMetadata(NAMESPACE_MAIN, ctor);
+    }
+  }
+
+  /**
+   * 入口注解
+   * @param obj 
+   * @param key 
+   * @param descriptor 
+   */
+  static readonly Entry: MethodDecorator = (obj, key, descriptor) => {
+    const ctor = obj.constructor;
+    if (!Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
+      Reflect.defineMetadata(NAMESPACE_MAIN, key, ctor);
+    }
+    const mainKey = Reflect.getMetadata(NAMESPACE_MAIN, ctor);
+    if (key !== mainKey) {
+      throw new Error(`Duplicate entry name: ${key.toString()} ${mainKey.toString()}`);
+    }
+  }
 
   /**
    * 分支注解
@@ -21,6 +45,10 @@ export abstract class Hook<I, O, P extends any[] = []> {
     const fn = descriptor.value;
     type IFN = typeof fn;
     if (typeof fn === 'function') {
+      // @ts-ignore
+      if (fn[Symbol.toStringTag] !== 'AsyncFunction') {
+        throw new Error('It must be an AsyncFunction on Key of ' + key.toString());
+      }
       descriptor.value = async function(this: Hook<any, any>, ...args: any[]) {
         const node = this[SYMBOLS_FLOWS].has(key as any) 
           ? this[SYMBOLS_FLOWS].get(key as any)
@@ -34,8 +62,6 @@ export abstract class Hook<I, O, P extends any[] = []> {
   }
 
   public $hook(key: HookKeys<this>) {
-    const fn = this[key] as Function;
-    
     // Hook名必须存在
     if (!this[key]) {
       throw new Error('Non-existent hook name: ' + key.toString());
@@ -46,12 +72,6 @@ export abstract class Hook<I, O, P extends any[] = []> {
       throw new Error('The hook is not a valid function: ' + key.toString());
     }
 
-    // 被hook的方法参数
-    // 必须小于等于1
-    if (fn.length > 1) {
-      throw new Error('The hook function parameter must be less than or equal to 1: ' + key.toString());
-    }
-
     if (!this[SYMBOLS_FLOWS].has(key)) {
       this[SYMBOLS_FLOWS].set(key, new Node());
     }
@@ -59,8 +79,11 @@ export abstract class Hook<I, O, P extends any[] = []> {
     return this[SYMBOLS_FLOWS].get(key);
   }
 
-  public async $execute(...args: P) {
-    await this.initialize(...args);
+  public async $execute() {
+    if (this[SYMBOLS_MAIN]) {
+      //@ts-ignore
+      await this[this[SYMBOLS_MAIN]]();
+    }
     return this.res;
   }
 }
