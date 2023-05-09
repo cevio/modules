@@ -1,56 +1,39 @@
 import 'reflect-metadata';
 import { Node } from './node';
-import type { Next, NextKeys } from './types';
+import type { HookKeys } from './types';
 
-const NAMESPACE_MAIN = 'metadata.hook.main.namespace';
-const SYMBOLS_MAIN = Symbol('main');
 const SYMBOLS_FLOWS = Symbol('flows');
-const SYMBOLS_RUN = Symbol('run');
 
-export abstract class Hook<I, O> {
+export abstract class Hook<I, O, P extends any[] = []> {
   public abstract res: O;
-  private readonly [SYMBOLS_MAIN]: keyof this;
+  public abstract initialize(...args: P): Promise<unknown>;
   private readonly [SYMBOLS_FLOWS] = new Map<keyof this, Node<this>>();
 
-  constructor(public readonly req: I) {
-    const ctor = Object.getPrototypeOf(this).constructor;
-    if (Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
-      this[SYMBOLS_MAIN] = Reflect.getMetadata(NAMESPACE_MAIN, ctor);
+  constructor(public readonly req: I) {}
+
+  /**
+   * 分支注解
+   * @param obj 
+   * @param key 
+   * @param descriptor 
+   */
+  static readonly Node: MethodDecorator = (obj, key, descriptor) => {
+    const fn = descriptor.value;
+    type IFN = typeof fn;
+    if (typeof fn === 'function') {
+      descriptor.value = async function(this: Hook<any, any>, ...args: any[]) {
+        const node = this[SYMBOLS_FLOWS].has(key as any) 
+          ? this[SYMBOLS_FLOWS].get(key as any)
+          : undefined;
+        if (node) await node.executeInPrefix(this);
+        const result = await Promise.resolve(fn.call(this, ...args));
+        if (node) await node.executeInSuffix(this);
+        return result;
+      } as IFN
     }
   }
 
-  static readonly Entry: MethodDecorator = (obj, key) => {
-    const ctor = obj.constructor;
-    if (!Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
-      Reflect.defineMetadata(NAMESPACE_MAIN, key, ctor);
-    }
-    const mainKey = Reflect.getMetadata(NAMESPACE_MAIN, ctor);
-    if (key !== mainKey) {
-      throw new Error(`Duplicate entry name: ${key.toString()} ${mainKey.toString()}`);
-    }
-  }
-
-  private async [SYMBOLS_RUN](key: keyof this) {
-    if (!!this[key] && typeof this[key] === 'function') {
-      const node = this[SYMBOLS_FLOWS].get(key);
-      const next: Next<this> = async n => {
-        if (node) {
-          await node.executeInSuffix(this);
-        }
-        if (n) {
-          await this[SYMBOLS_RUN](n);
-        }
-      }
-      if (node) {
-        await node.executeInPrefix(this);
-      }
-
-      // @ts-ignore
-      await Promise.resolve(this[key](next));
-    }
-  }
-
-  public hook(key: NextKeys<this>) {
+  public $hook(key: HookKeys<this>) {
     const fn = this[key] as Function;
     
     // Hook名必须存在
@@ -76,11 +59,8 @@ export abstract class Hook<I, O> {
     return this[SYMBOLS_FLOWS].get(key);
   }
 
-  public async execute() {
-    if (this[SYMBOLS_MAIN]) {
-      const key = this[SYMBOLS_MAIN];
-      await this[SYMBOLS_RUN](key);
-    }
+  public async $execute(...args: P) {
+    await this.initialize(...args);
     return this.res;
   }
 }

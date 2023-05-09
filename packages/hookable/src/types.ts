@@ -1,15 +1,14 @@
 import type { Hook } from './hook';
 
-export type NextKeys<T> = {
-  [K in keyof T]: K extends 'hook'
+export type HookKeys<T> = {
+  [K in keyof T]: K extends `$${string}`
     ? never 
-    : T[K] extends (next?: Next<T>) => Promise<void> 
+    : T[K] extends Function
       ? K 
       : never
 }[keyof T];
 
-export type PickHook<T> = T extends Hook<infer I, infer O> ? [I, O] : [never, never];
-export type Next<T> = (key?: NextKeys<T>) => Promise<unknown>;
+export type PickHook<T> = T extends Hook<infer I, infer O, infer P> ? [I, O, P] : [never, never, []];
 export type INodeFunction<T> = (obj: T) => unknown | Promise<unknown>;
 
 export interface IClazz<T> {

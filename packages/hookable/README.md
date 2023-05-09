@@ -8,18 +8,20 @@
 import { Hook } from '@pjblog/hookable';
 import type { Next } from '@pjblog/hookable';
 
-class ABC extends Hook<number, number> {
+class ABC extends Hook<number, number, [number]> {
   public res = 0;
   
-  @Hook.Entry
-  async a(next: Next<ABC>) {
-    this.res += this.req * 2;
-    await next('b');
+  @Hook.Node
+  public async initialize(a: number) {
+    this.res += this.req * 2 + a;
+    const j = await this.b(4);
+    this.res += j;
   }
 
-  async b(next: Next<ABC>) {
-    this.res += this.req * 3;
-    await next();
+  @Hook.Node
+  async b(a: number) {
+    this.res += this.req * 3 + a;
+    return 1;
   }
 }
 
@@ -27,26 +29,26 @@ class ABC extends Hook<number, number> {
 
 const obj = new ABC(99);
 
-obj.hook('a').before('c', o => {
+obj.$hook('initialize').before('c', o => {
   console.log('c')
   o.res += 1;
 })
 
-obj.hook('a').insertAfter('c', 'd', o => {
+obj.$hook('initialize').insertAfter('c', 'd', o => {
   console.log('d')
   o.res += 1;
 })
 
-obj.hook('a').insertBefore('c', 'e', o => {
+obj.$hook('initialize').insertBefore('c', 'e', o => {
   console.log('e')
   o.res -= 1;
 })
 
-obj.execute().then(console.log).catch(console.error);
+obj.$execute(35).then(console.log).catch(console.error);
 
 // output：
 // e
 // c
 // d
-// 496
+// 536
 ```
