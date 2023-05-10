@@ -23,15 +23,9 @@ export abstract class Hook<I, O> {
     }
   }
 
-  static readonly Container: ClassDecorator = obj => {
-    if (!Reflect.hasMetadata(NAMESPACE_CONTAINER, obj)) {
-      Reflect.defineMetadata(NAMESPACE_CONTAINER, new Set(), obj);
-    }
-  }
-
   static use<T extends Hook<any, any>>(clazz: IClazz<T>, callback: (obj: T) => void) {
     if (!Reflect.hasMetadata(NAMESPACE_CONTAINER, clazz)) {
-      throw new Error('Hook must be wrapped with `@Hook.Container`');
+      Reflect.defineMetadata(NAMESPACE_CONTAINER, new Set<(obj: T) => void>(), clazz);
     }
     const hooks: Set<(obj: T) => void> = Reflect.getMetadata(NAMESPACE_CONTAINER, clazz);
     hooks.add(callback);
