@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 import { Node } from './node';
-import type { HookKeys } from './types';
+import type { HookKeys, IClazz } from './types';
 
 const NAMESPACE_MAIN = 'metadata.hook.main.namespace';
+const NAMESPACE_CONTAINER = 'metadata.hook.container.namespace';
 const SYMBOLS_MAIN = Symbol('main');
 const SYMBOLS_FLOWS = Symbol('flows');
 
@@ -16,6 +17,25 @@ export abstract class Hook<I, O> {
     if (Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
       this[SYMBOLS_MAIN] = Reflect.getMetadata(NAMESPACE_MAIN, ctor);
     }
+    if (Reflect.hasMetadata(NAMESPACE_CONTAINER, ctor)) {
+      const hooks: Set<(obj: this) => void> = Reflect.getMetadata(NAMESPACE_CONTAINER, ctor);
+      hooks.forEach(hook => hook(this));
+    }
+  }
+
+  static readonly Container: ClassDecorator = obj => {
+    if (!Reflect.hasMetadata(NAMESPACE_CONTAINER, obj)) {
+      Reflect.defineMetadata(NAMESPACE_CONTAINER, new Set(), obj);
+    }
+  }
+
+  static use<T extends Hook<any, any>>(clazz: IClazz<T>, callback: (obj: T) => void) {
+    if (!Reflect.hasMetadata(NAMESPACE_CONTAINER, clazz)) {
+      throw new Error('Hook must be wrapped with `@Hook.Container`');
+    }
+    const hooks: Set<(obj: T) => void> = Reflect.getMetadata(NAMESPACE_CONTAINER, clazz);
+    hooks.add(callback);
+    return () => hooks.delete(callback);
   }
 
   /**
