@@ -38,8 +38,16 @@ export abstract class Hook<I, O> {
    * @param key 
    * @param descriptor 
    */
-  static readonly Entry: MethodDecorator = (obj, key, descriptor) => {
-    const ctor = obj.constructor;
+  static readonly Entry: MethodDecorator = (obj, key) => {
+    Hook.setEntry(obj.constructor, key);
+  }
+
+  /**
+   * 设置入口
+   * @param ctor 
+   * @param key 
+   */
+  static setEntry(ctor: Function, key: string | symbol) {
     if (!Reflect.hasMetadata(NAMESPACE_MAIN, ctor)) {
       Reflect.defineMetadata(NAMESPACE_MAIN, key, ctor);
     }
