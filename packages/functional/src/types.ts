@@ -1,12 +1,12 @@
 import type { Hook } from './hook';
 export type Props<I, C extends Array<any> = []> = Readonly<I & { 
-  children: C,
-  useHook: <R>(key: string, fn: () => R) => Promise<R> 
+  children?: C,
+  useHook?: <R>(key: string, fn: () => R) => Promise<R> 
 }>;
 
 export type Component<I = {}, C extends Array<any> = any[], O = any> = (props?: Props<I, C>) => O | Promise<O> | ((hook?: Hook) => Promise<O>);
 
-export type ComponentChildren<T> = T extends (...args: any[]) => any ? Parameters<T>[0] extends { readonly children: infer C } ? C : [] : [];
+export type ComponentChildren<T> = T extends (...args: any[]) => any ? Parameters<T>[0] extends { readonly children?: infer C } ? C : [] : [];
 
 export type ComponentWrapper<T extends any[]> = [
   ...{ 
