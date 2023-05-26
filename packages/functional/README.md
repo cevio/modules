@@ -5,51 +5,46 @@
 ## Usage
 
 ```ts
-import { createComponent, Props, Hook } from '@evio/functional';
+import { Props, createComponent, Hook, execute } from '@evio/functional';
+
 const hook = new Hook();
 
-
-hook.use(A).on('a', (res: any) => {
-  res.value++;
-  res.value++;
-  res.value++;
-  res.value++;
+hook.use(FFF).on('test', (obj: { c: number }) => {
+  obj.c += 99
 })
 
-async function A(props: Props<{ a: number }, [string, boolean, string, ...any[]]>) {
-  const { a, children, useHook } = props;
-  const [user, paten, bol, ...other] = children;
-  const x = await useHook('a', () => {
+async function FFF(props: Props<{}>) {
+  const { c } = await props.useHook('test', () => {
     return {
-      value: 1
+      c: 1
     }
   })
+  return 'ddd' + c
+}
+
+function ABC(props: Props<{}, [string]>) {
   return {
-    aa: 1 + a,
-    user,
-    paten,
-    bol,
-    extra: other,
-    x
+    name: 'abc',
+    value: props.children[0]
   }
 }
 
-function B(props: Props<{ b: number }, [string, number]>) {
-  return (props.b + 100) + props.children[0] + props.children[1];
+function KKK(props: Props<{}, [ReturnType<typeof ABC>]>) {
+  return <ABC>
+    <FFF />
+  </ABC>
 }
 
-function c() {
-  return 'evio'
-}
+execute(<KKK />, hook).then(console.log)
+```
 
-const result = createComponent(
-  A, 
-  { a: 562 }, 
-  createComponent(B, { b: 19 }, createComponent(c), 999),
-  true,
-  'hello world',
-  '4535'
-)
 
-result(hook).then(console.log);
+output:
+
+```bash
+evioshen@shenyunjiedeMBP 111 % ts-node src/index.tsx       
+{ name: 'abc', value: 'ddd100' }
+evioshen@shenyunjiedeMBP 111 % tsc -d                      
+evioshen@shenyunjiedeMBP 111 % node dist/index.js          
+{ name: 'abc', value: 'ddd100' }
 ```

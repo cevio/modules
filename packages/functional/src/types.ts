@@ -1,7 +1,7 @@
 import type { Hook } from './hook';
 export type Props<I, C extends Array<any> = []> = Readonly<I & { 
   children?: C,
-  useHook?: <R>(key: string, fn: () => R) => Promise<R> 
+  useHook?: <R>(key: string, fn: () => R | Promise<R>) => Promise<R> 
 }>;
 
 export type Component<I = {}, C extends Array<any> = any[], O = any> = (props?: Props<I, C>) => O | Promise<O> | ((hook?: Hook) => Promise<O>);

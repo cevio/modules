@@ -26,8 +26,8 @@ export function createComponent<T extends Component>(
     // inject into props
     // it collect fns from hook provider
     // then run the each hooks at the end of fn result
-    const useHook = async <R>(key: string, fn: () => R) => {
-      const res = await Promise.resolve(fn());
+    const useHook = async <R>(key: string, fn: () => R | Promise<R>) => {
+      const res = await Promise.resolve<R>(fn());
       if (hook && hook.has(callback)) {
         await hook.use(callback).use(key, res);
       }
