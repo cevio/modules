@@ -1,0 +1,20 @@
+{
+  "name": "@evio/functional",
+  "version": "1.0.0",
+  "description": "some description",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
