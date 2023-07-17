@@ -23,8 +23,11 @@ export async function Close() {
   const rollbacks = RollBacks.slice(0);
   RollBacks.length = 0;
   let i = rollbacks.length;
-  while (i--) {
-    await Promise.resolve(rollbacks[i]());
+  if (i) {
+    while (i--) {
+      await Promise.resolve(rollbacks[i]());
+    }
+    await Close();
   }
 }
 
@@ -42,7 +45,7 @@ function resolve<T>(node: Node, res: T) {
   return res;
 }
 
-async function reject(node: Node, e: any) {
+function reject(node: Node, e: any) {
   node.reject(e);
   return Promise.reject(e);
 }
