@@ -38,4 +38,13 @@ export class Node extends Set<{
     }
     return this;
   }
+
+  public get() {
+    switch (this.status) {
+      case -1: throw this.error;
+      case 0: throw new Error('Component is pending.');
+      case 1: return this.value;
+      default: throw new Error('Unknow status.');
+    }
+  }
 }

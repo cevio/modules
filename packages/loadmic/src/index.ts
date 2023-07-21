@@ -7,6 +7,13 @@ export type Component<R = any> = () => R | Promise<R>;
 const Applications = new Map<Component, Node>();
 const RollBacks: (() => unknown | Promise<unknown>)[] = [];
 
+export function useApplication<T>(component: Component<T>): T {
+  if (!Applications.has(component)) {
+    throw new Error('Invalid component or it is unloaded.');
+  }
+  return Applications.get(component).get();
+}
+
 export function useComponent<T>(component: Component<T>) {
   if (!Applications.has(component)) {
     return execute(component);
