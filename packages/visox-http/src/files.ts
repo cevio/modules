@@ -6,6 +6,7 @@ import { Context, Next, type Middleware } from 'koa';
 import { compile, type PathFunction } from 'path-to-regexp';
 import { useEffect } from '@evio/visox';
 import { Request } from './request';
+import { Response } from './response';
 
 type ReturnTypeDefineRouter<T extends string = any> = ReturnType<typeof defineRouter<T>>;
 export type DefineResolver<T extends string = any> = (req: Request<T>) => Response | Promise<Response>;
