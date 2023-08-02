@@ -1,0 +1,25 @@
+{
+  "name": "@evio/visox-typeorm-ioredis-service",
+  "version": "1.0.0",
+  "description": "some description",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@evio/visox": "^1.0.1",
+    "@evio/visox-ioredis": "^1.0.1",
+    "@evio/visox-typeorm": "^1.0.1"
+  }
+}

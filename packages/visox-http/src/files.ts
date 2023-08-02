@@ -42,7 +42,7 @@ function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[]
   }
 }
 
-export function defineHTTPRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[], Middlewares: Middleware[], handler: DefineResolver<T>) {
+export function defineController<T extends string = any>(methods: HTTPMethod | HTTPMethod[], Middlewares: Middleware[], handler: DefineResolver<T>) {
   const handlerMiddleware = async (ctx: Context, next: Next) => {
     const req = typeof ctx.state.createRequest === 'function'
       ? ctx.state.createRequest(ctx)
