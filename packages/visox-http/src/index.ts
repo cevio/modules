@@ -18,7 +18,7 @@ export interface Props {
   createRequest?: <T extends Request>(ctx: Context) => T,
 }
 
-export default function Http(props: Props) {
+export function createHttpServer(props: Props) {
   return async () => {
     const koa = new Koa();
     const keys = koa.keys = [randomBytes(32).toString(), randomBytes(64).toString()];
