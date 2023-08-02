@@ -18,8 +18,9 @@ export interface Props {
   createRequest?: <T extends Request>(ctx: Context) => T,
 }
 
-export function createHttpServer(props: Props) {
+export function createHttpServer(props: Props | (() => Props)) {
   return async () => {
+    const _props = typeof props === 'function' ? props() : props;
     const koa = new Koa();
     const keys = koa.keys = [randomBytes(32).toString(), randomBytes(64).toString()];
     const app = FindMyWay({
@@ -33,14 +34,14 @@ export function createHttpServer(props: Props) {
     })
 
     koa.use(async (ctx, next) => {
-      if (typeof props.createRequest === 'function') {
-        ctx.state.createRequest = props.createRequest;
+      if (typeof _props.createRequest === 'function') {
+        ctx.state.createRequest = _props.createRequest;
       }
       await next();
     })
 
-    if (props.middlewares) {
-      props.middlewares.forEach(
+    if (_props.middlewares) {
+      _props.middlewares.forEach(
         middleware => koa.use(middleware)
       );
     }
@@ -49,14 +50,14 @@ export function createHttpServer(props: Props) {
 
     const server = createServer(koa.callback());
     await new Promise<void>((resolve, reject) => {
-      server.listen(props.port, (err?: any) => {
+      server.listen(_props.port, (err?: any) => {
         if (err) return reject(err);
         resolve();
       })
     })
     useEffect(() => server.close());
 
-    await LoadFiles(app, props.controllers);
+    await LoadFiles(app, _props.controllers);
 
     return {
       koa, app, server, keys,

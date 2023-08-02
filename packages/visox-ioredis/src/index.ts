@@ -1,9 +1,9 @@
 import ioRedis, { type RedisOptions } from 'ioredis';
 import { useEffect } from '@evio/visox';
 export * from './cache';
-export function createIoRedisServer(props: RedisOptions) {
+export function createIoRedisServer(props: RedisOptions | (() => RedisOptions)) {
   return async () => {
-    const redis = new ioRedis(props);
+    const redis = new ioRedis(typeof props === 'function' ? props() : props);
     await new Promise<void>((resolve, reject) => {
       const onerror = (e: any) => reject(e);
       redis.on('error', onerror);

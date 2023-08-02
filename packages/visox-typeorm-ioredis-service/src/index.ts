@@ -4,25 +4,34 @@ import { OriginFunction, Cache, Transformer } from '@evio/visox-ioredis';
 export type TypeORMConnection = DataSource | QueryRunner;
 
 export class Service {
+  public readonly conn: TypeORMConnection;
+  public readonly redis: Redis;
+  private readonly keyWrapper?: (key: string) => string;
   private readonly stacks = new Map<Function, Cache>();
-  constructor(
-    public readonly conn: TypeORMConnection,
-    public readonly redis: Redis,
-    private readonly keyWrapper?: (key: string) => string,
-  ) {
-    const proto = this.constructor.prototype;
-    if (Reflect.hasMetadata(Service.CacheNameSpace, proto)) {
-      const map: Map<string, Transformer> = Reflect.getMetadata(Service.CacheNameSpace, proto);
-      for (const [method, transformer] of map) {
-        // @ts-ignore
-        const fn: OriginFunction = this[method];
-        const cache = new Cache(this.redis, fn.bind(this), transformer, this.keyWrapper);
-        this.stacks.set(fn, cache);
+  constructor(options: {
+    conn?: TypeORMConnection,
+    redis?: Redis,
+    key?: (key: string) => string
+  } = {}) {
+    this.conn = options.conn;
+    this.redis = options.redis;
+    this.keyWrapper = options.key;
+    if (this.redis) {
+      const proto = this.constructor.prototype;
+      if (Reflect.hasMetadata(Service.CacheNameSpace, proto)) {
+        const map: Map<string, Transformer> = Reflect.getMetadata(Service.CacheNameSpace, proto);
+        for (const [method, transformer] of map) {
+          // @ts-ignore
+          const fn: OriginFunction = this[method];
+          const cache = new Cache(this.redis, fn.bind(this), transformer, this.keyWrapper);
+          this.stacks.set(fn, cache);
+        }
       }
     }
   }
 
   public getRepository<T>(target: EntityTarget<T>) {
+    if (!this.conn) throw new Error('TypeORM connection invaild.');
     return this.conn.manager.getRepository(target);
   }
 
