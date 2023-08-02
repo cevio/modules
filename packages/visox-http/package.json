@@ -1,6 +1,6 @@
 {
   "name": "@evio/visox-http",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@evio/visox": "^1.0.0",
+    "@evio/visox": "^1.0.1",
     "cookies": "^0.8.0",
     "glob": "^10.3.3",
     "koa": "^2.14.2",
