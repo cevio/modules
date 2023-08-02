@@ -2,7 +2,7 @@ import { type Context } from "koa";
 import { Response } from './response';
 
 export class Request<P extends string = any> {
-  constructor(private readonly ctx: Context) { }
+  constructor(public readonly ctx: Context) { }
 
   public getParam(key: P, defaultValue?: string): string {
     return this.ctx.params[key] || defaultValue;
