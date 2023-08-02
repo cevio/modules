@@ -1,7 +1,7 @@
 {
-  "name": "@evio/loadmic",
-  "version": "1.0.4",
-  "description": "some description",
+  "name": "@evio/visox",
+  "version": "1.0.0",
+  "description": "loader module by promise",
   "license": "MIT",
   "main": "dist/index.js",
   "keywords": [],
@@ -9,7 +9,9 @@
     "lib": "src"
   },
   "files": [
-    "dist"
+    "dist",
+    "!test.js",
+    "!test.d.ts"
   ],
   "scripts": {
     "build": "rm -rf ./dist && tsc"
