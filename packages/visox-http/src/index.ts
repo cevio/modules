@@ -11,14 +11,14 @@ export * from './files';
 export * from './request';
 export * from './response';
 
-export interface Props {
+export interface Props<T extends Request = Request> {
   port: number,
   middlewares?: Middleware[],
   controllers: LoadFilesProps,
-  createRequest?: <T extends Request>(ctx: Context) => T,
+  createRequest?: (ctx: Context) => T,
 }
 
-export function createHttpServer(props: Props | (() => Props)) {
+export function createHttpServer<T extends Request = Request>(props: Props<T> | (() => Props<T>)) {
   return async () => {
     const _props = typeof props === 'function' ? props() : props;
     const koa = new Koa();
