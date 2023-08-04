@@ -73,12 +73,6 @@ export async function LoadFiles(instance: Instance, props: LoadFilesProps) {
   }
 }
 
-export async function importDynamic<T = any>(file: string): Promise<T> {
-  try {
-    const res = await import(file);
-    return res.default;
-  } catch (e) {
-    const res = require(file);
-    return res.default;
-  }
+export function importDynamic<T = any>(file: string): T {
+  return require(file).default;
 }
