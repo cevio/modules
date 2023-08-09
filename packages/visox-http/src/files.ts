@@ -12,7 +12,7 @@ type ReturnTypeDefineRouter<T extends string = any> = ReturnType<typeof defineRo
 export type DefineResolver<T extends string = any> = (req: Request<T>) => Response | Promise<Response>;
 
 export interface LoadFilesProps {
-  directory: string,
+  directory: string | string[],
   suffix?: string,
 }
 
@@ -56,23 +56,32 @@ export function defineController<T extends string = any>(methods: HTTPMethod | H
 
 export async function LoadFiles(instance: Instance, props: LoadFilesProps) {
   if (!props.suffix) props.suffix = 'com';
-  const files = await glob(`**/*.${props.suffix}.{ts,js}`, { cwd: props.directory });
+  if (!Array.isArray(props.directory)) {
+    props.directory = [props.directory];
+  }
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    let response = await importDynamic<ReturnTypeDefineRouter | ReturnTypeDefineRouter[]>(resolve(props.directory, file));
-    if (!Array.isArray(response)) {
-      response = [response];
+  const directories = props.directory as string[];
+
+  for (let j = 0; j < directories.length; j++) {
+    const directory = directories[j];
+    const files = await glob(`**/*.${props.suffix}.{ts,js}`, { cwd: directory });
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      let response = await importDynamic<ReturnTypeDefineRouter | ReturnTypeDefineRouter[]>(resolve(directory, file));
+      if (!Array.isArray(response)) {
+        response = [response];
+      }
+      const path = file.substring(0, file.length - (4 + props.suffix.length));
+      response.forEach(({ create, mount, unmount }) => {
+        create(path);
+        mount(instance);
+        useEffect(() => unmount(instance));
+      })
     }
-    const path = file.substring(0, file.length - (4 + props.suffix.length));
-    response.forEach(({ create, mount, unmount }) => {
-      create(path);
-      mount(instance);
-      useEffect(() => unmount(instance));
-    })
   }
 }
 
-export function importDynamic<T = any>(file: string): T {
-  return require(file).default;
+export function importDynamic<T = any>(file: string): Promise<T> {
+  return Promise.resolve(require(file).default);
 }
