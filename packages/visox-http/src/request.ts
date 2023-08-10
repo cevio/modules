@@ -35,4 +35,8 @@ export class Request<P extends string = any> {
     if (body) res.body(body);
     return res;
   }
+
+  public json(body: any) {
+    return new Response(this.ctx).json(body);
+  }
 }
