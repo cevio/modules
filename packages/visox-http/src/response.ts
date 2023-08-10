@@ -1,5 +1,6 @@
 import { Context } from "koa";
 import { type SetOption } from 'cookies';
+import { Stream } from 'node:stream';
 
 export class Response {
   constructor(private readonly ctx: Context) { }
@@ -26,6 +27,24 @@ export class Response {
 
   public cookie(name: string, value?: string, opts?: SetOption) {
     this.ctx.cookies.set(name, value, opts);
+    return this;
+  }
+
+  public json<T extends object>(data: T) {
+    this.ctx.set('Content-Type', 'application/json; charset=utf-8');
+    this.ctx.body = data;
+    return this;
+  }
+
+  public html(data: string) {
+    this.ctx.set('Content-Type', 'text/html; charset=utf-8');
+    this.ctx.body = data;
+    return this;
+  }
+
+  public stream<T extends Stream>(data: T) {
+    this.ctx.set('Content-Type', 'application/octet-stream');
+    this.ctx.body = data;
     return this;
   }
 }
