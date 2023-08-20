@@ -1,6 +1,6 @@
 {
   "name": "@evio/visox-ioredis",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
