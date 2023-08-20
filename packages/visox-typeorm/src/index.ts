@@ -1,9 +1,13 @@
 import { useEffect } from '@evio/visox';
 import { DataSource, type DataSourceOptions, type QueryRunner } from 'typeorm';
 
-export function createTypeORMServer(props: DataSourceOptions | (() => DataSourceOptions)) {
+export function createTypeORMServer(props: DataSourceOptions | (() => DataSourceOptions | Promise<DataSourceOptions>)) {
   return async () => {
-    const connection = new DataSource(typeof props === 'function' ? props() : props)
+    const connection = new DataSource(
+      typeof props === 'function'
+        ? await Promise.resolve(props())
+        : props
+    );
     await connection.initialize();
     useEffect(() => connection.destroy());
     return connection;
