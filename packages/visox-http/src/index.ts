@@ -18,9 +18,11 @@ export interface Props<T extends Request = Request> {
   createRequest?: (ctx: Context) => T,
 }
 
-export function createHttpServer<T extends Request = Request>(props: Props<T> | (() => Props<T>)) {
+export function createHttpServer<T extends Request = Request>(props: Props<T> | (() => Props<T> | Promise<Props<T>>)) {
   return async () => {
-    const _props = typeof props === 'function' ? props() : props;
+    const _props = typeof props === 'function'
+      ? await Promise.resolve(props())
+      : props;
     const koa = new Koa();
     const keys = koa.keys = [randomBytes(32).toString(), randomBytes(64).toString()];
     const app = FindMyWay({
