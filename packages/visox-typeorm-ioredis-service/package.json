@@ -1,6 +1,6 @@
 {
   "name": "@evio/visox-typeorm-ioredis-service",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
@@ -20,6 +20,6 @@
   "dependencies": {
     "@evio/visox": "^1.0.1",
     "@evio/visox-ioredis": "^1.0.2",
-    "@evio/visox-typeorm": "^1.0.2"
+    "@evio/visox-typeorm": "^1.0.3"
   }
 }
