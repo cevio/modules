@@ -2,7 +2,7 @@ import FindMyWay from 'koa-router-find-my-way';
 import Koa, { Context, Next, Middleware } from 'koa';
 import { randomBytes } from 'crypto';
 import { useEffect } from '@evio/visox';
-import { createServer } from 'node:http';
+import { createServer, Server } from 'node:http';
 import { LoadFiles, type LoadFilesProps } from './files';
 import { type Request } from './request';
 
@@ -16,6 +16,7 @@ export interface Props<T extends Request = Request> {
   middlewares?: Middleware[],
   controllers: LoadFilesProps,
   createRequest?: (ctx: Context) => T,
+  onServer?(server: Server): unknown | Promise<unknown>,
 }
 
 export function createHttpServer<T extends Request = Request>(props: Props<T> | (() => Props<T> | Promise<Props<T>>)) {
@@ -51,6 +52,9 @@ export function createHttpServer<T extends Request = Request>(props: Props<T> | 
     koa.use(app.routes());
 
     const server = createServer(koa.callback());
+    if (_props.onServer) {
+      await Promise.resolve(_props.onServer(server));
+    }
     await new Promise<void>((resolve, reject) => {
       server.listen(_props.port, (err?: any) => {
         if (err) return reject(err);
