@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { Instance } from 'koa-router-find-my-way';
 import { type HTTPMethod } from 'find-my-way';
 import { Context, Next, type Middleware } from 'koa';
-import { compile, type PathFunction } from 'path-to-regexp';
+import { compile, type PathFunction, match, type MatchFunction } from 'path-to-regexp';
 import { useEffect } from '@evio/visox';
 import { Request } from './request';
 import { Response } from './response';
@@ -19,6 +19,7 @@ export interface LoadFilesProps {
 function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[], ...Middlewares: Middleware[]) {
   let expression: string;
   let toPath: PathFunction<Record<T, string>>;
+  let matchPath: MatchFunction<Record<T, string>>;
 
   const CreateExpression = (path: string) => {
     path = path.startsWith('/') ? path : '/' + path;
@@ -30,6 +31,7 @@ function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[]
     }
     expression = path;
     toPath = compile<Record<T, string>>(path, { encode: encodeURIComponent });
+    matchPath = match(path, { decode: decodeURIComponent });
   }
 
   const Mount = (fwm: Instance) => fwm.on(methods, expression, ...Middlewares);
@@ -40,6 +42,7 @@ function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[]
     unmount: UnMount,
     create: CreateExpression,
     toPath,
+    match: matchPath,
   }
 }
 
