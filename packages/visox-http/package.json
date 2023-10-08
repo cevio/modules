@@ -1,6 +1,6 @@
 {
   "name": "@evio/visox-http",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
