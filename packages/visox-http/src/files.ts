@@ -17,9 +17,11 @@ export interface LoadFilesProps {
 }
 
 function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[], ...Middlewares: Middleware[]) {
-  let expression: string;
-  let toPath: PathFunction<Record<T, string>>;
-  let matchPath: MatchFunction<Record<T, string>>;
+  const target = {
+    expression: null as string,
+    toPath: null as PathFunction<Record<T, string>>,
+    matchPath: null as MatchFunction<Record<T, string>>
+  }
 
   const CreateExpression = (path: string) => {
     path = path.startsWith('/') ? path : '/' + path;
@@ -29,20 +31,24 @@ function defineRouter<T extends string = any>(methods: HTTPMethod | HTTPMethod[]
     if (!path) {
       path = '/';
     }
-    expression = path;
-    toPath = compile<Record<T, string>>(path, { encode: encodeURIComponent });
-    matchPath = match(path, { decode: decodeURIComponent });
+    target.expression = path;
+    target.toPath = compile<Record<T, string>>(path, { encode: encodeURIComponent });
+    target.matchPath = match(path, { decode: decodeURIComponent });
   }
 
-  const Mount = (fwm: Instance) => fwm.on(methods, expression, ...Middlewares);
-  const UnMount = (fwm: Instance) => fwm.off(methods, expression);
+  const Mount = (fwm: Instance) => fwm.on(methods, target.expression, ...Middlewares);
+  const UnMount = (fwm: Instance) => fwm.off(methods, target.expression);
 
   return {
     mount: Mount,
     unmount: UnMount,
     create: CreateExpression,
-    toPath,
-    match: matchPath,
+    toPath(data?: Record<T, string>) {
+      return target.toPath(data);
+    },
+    match(path: string) {
+      return target.matchPath(path);
+    },
   }
 }
 
