@@ -1,6 +1,6 @@
 {
   "name": "@evio/visox-typeorm",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "some description",
   "license": "MIT",
   "main": "dist/index.js",
